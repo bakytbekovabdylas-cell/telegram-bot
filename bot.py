@@ -1,0 +1,27 @@
+import telebot
+from groq import Groq
+
+TELEGRAM_TOKEN = "YOUR_TELEGRAM_TOKEN"
+GROQ_API_KEY = "YOUR_GROQ_API_KEY"
+
+bot = telebot.TeleBot(TELEGRAM_TOKEN)
+client = Groq(api_key=GROQ_API_KEY)
+
+@bot.message_handler(commands=["start"])
+def start(message):
+    bot.send_message(message.chat.id, "Привет! Я умный бот!")
+
+@bot.message_handler(func=lambda message: True)
+def answer(message):
+    bot.send_message(message.chat.id, "Думаю...")
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[
+            {"role": "system", "content": "Отвечай на русском языке."},
+            {"role": "user", "content": message.text}
+        ]
+    )
+    reply = response.choices[0].message.content
+    bot.send_message(message.chat.id, reply)
+
+bot.polling()
